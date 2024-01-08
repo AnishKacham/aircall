@@ -6,11 +6,15 @@ import SouthEastIcon from '@mui/icons-material/SouthEast';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ArchiveTwoToneIcon from '@mui/icons-material/ArchiveTwoTone';
 import _ from 'lodash';
+import CallDetail from "./CallDetail.jsx";
+import { InfoTwoTone } from "@mui/icons-material";
 
 const CallActivity = (props)=>{
   const [fetchState,setFetchState] = useState("loading");
   const [callsList,setCalls] = useState({});
   const [rawCallsList,setRawCallsList] = useState([]);
+  const [detailsOpen,setDetailsOpen] = useState(false);
+  const [selectedId,setSelectedId] = useState(0);
 
   useEffect(()=>{
     fetch("https://cerulean-marlin-wig.cyclic.app/activities")
@@ -31,6 +35,11 @@ const CallActivity = (props)=>{
     })
   },[])
 
+  const handleCallDetailClick = (selectedId)=>{
+    setSelectedId(selectedId);
+    setDetailsOpen(true);
+  }
+
   const handleArchiveAll = () => {
     console.log("Archiving all calls . . .");
     Promise.all(rawCallsList.map(
@@ -44,6 +53,8 @@ const CallActivity = (props)=>{
         })
       })
     )).then((res)=>{
+      setCalls({});
+      setRawCallsList([]);
       console.log("ARCHIVED ALL CALLS")
     })
   }
@@ -58,7 +69,9 @@ const CallActivity = (props)=>{
       body: JSON.stringify({
         "is_archived" : true
       })
-    }).then(res=>{console.log(res)})
+    }).then(res=>{
+      console.log(res)
+    })
     .catch(err=> {console.log(err)})
   }
 
@@ -71,11 +84,11 @@ const CallActivity = (props)=>{
     height: "100%",
     gap: "20px",
   }}>
-    <Button color="warning" variant="contained" startIcon={<ArchiveTwoToneIcon/>} onClick={handleArchiveAll}>Archive All Calls</Button>
+    <Button color="error" variant="contained" startIcon={<ArchiveTwoToneIcon/>} onClick={handleArchiveAll}>Archive All Calls</Button>
     {
       Object.entries(callsList).map(([key,value],i)=>{
-        return <div>
-          <div key={i} style={{
+        return <div key={i}>
+          <div style={{
             width:"100%",
             textAlign: "center",
             fontWeight: "bolder"
@@ -121,10 +134,13 @@ const CallActivity = (props)=>{
                       {rec.direction==='outbound'? rec.to : rec.from}
                     </div>
                     
-                    <div style={{alignSelf:"flex-end", marginLeft: "auto", display:"flex", alignItems:"center", gap:"5px"}}>
+                    <div style={{alignSelf:"flex-end", marginLeft: "auto", display:"flex", alignItems:"center"}}>
                       <Chip variant="outlined" label={callTime.toLocaleTimeString()} color={timeChipStyle} size="small" icon={<AccessTimeIcon/>} />
                       <IconButton color={timeChipStyle} onClick={()=>{handleArchive(rec.id)}}>
                         <ArchiveTwoToneIcon/>
+                      </IconButton>
+                      <IconButton color={timeChipStyle} onClick={()=>{handleCallDetailClick(rec.id)}}>
+                        <InfoTwoTone/>
                       </IconButton>
                     </div>
                   </Card>
@@ -134,6 +150,7 @@ const CallActivity = (props)=>{
         </div> 
       })
     }
+    {detailsOpen && <CallDetail open={detailsOpen} setOpen={setDetailsOpen} callId={selectedId}/>}
   </Stack>
 }
 

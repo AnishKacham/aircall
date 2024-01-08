@@ -6,11 +6,15 @@ import SouthEastIcon from '@mui/icons-material/SouthEast';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import UnarchiveTwoToneIcon from '@mui/icons-material/UnarchiveTwoTone';
 import _ from 'lodash';
+import { InfoTwoTone } from "@mui/icons-material";
+import CallDetail from "./CallDetail.jsx";
 
 const CallActivity = (props)=>{
   const [fetchState,setFetchState] = useState("loading");
   const [callsList,setCalls] = useState({});
   const [rawCallsList,setRawCallsList] = useState([]);
+  const [detailsOpen,setDetailsOpen] = useState(false);
+  const [selectedId,setSelectedId] = useState(0);
 
   useEffect(()=>{
     fetch("https://cerulean-marlin-wig.cyclic.app/activities")
@@ -30,6 +34,11 @@ const CallActivity = (props)=>{
       setFetchState("failed")
     })
   },[])
+
+  const handleCallDetailClick = (selectedId)=>{
+    setSelectedId(selectedId);
+    setDetailsOpen(true);
+  }
 
   const handleUnarchvieAll = () => {
     console.log("Un Archiving all calls . . .");
@@ -69,7 +78,7 @@ const CallActivity = (props)=>{
     height: "100%",
     gap: "20px",
   }}>
-    <Button color="success" variant="contained" startIcon={<UnarchiveTwoToneIcon/>} onClick={handleUnarchvieAll}>Unarchive All</Button>
+    <Button color="success" variant="contained" startIcon={<UnarchiveTwoToneIcon/>} onClick={handleUnarchvieAll}>Unarchive All Calls</Button>
     {
       Object.entries(callsList).map(([key,value],i)=>{
         return <div>
@@ -119,10 +128,13 @@ const CallActivity = (props)=>{
                       {rec.direction==='outbound'? rec.to : rec.from}
                     </div>
                     
-                    <div style={{alignSelf:"flex-end", marginLeft: "auto", display:"flex", alignItems:"center", gap:"5px"}}>
+                    <div style={{alignSelf:"flex-end", marginLeft: "auto", display:"flex", alignItems:"center"}}>
                       <Chip variant="outlined" label={callTime.toLocaleTimeString()} color={timeChipStyle} size="small" icon={<AccessTimeIcon/>} />
                       <IconButton color={timeChipStyle} onClick={()=>{handleUnarchive(rec.id)}}>
                         <UnarchiveTwoToneIcon/>
+                      </IconButton>
+                      <IconButton color={timeChipStyle} onClick={()=>{handleCallDetailClick(rec.id)}}>
+                        <InfoTwoTone/>
                       </IconButton>
                     </div>
                   </Card>
@@ -132,6 +144,7 @@ const CallActivity = (props)=>{
         </div> 
       })
     }
+    {detailsOpen && <CallDetail open={detailsOpen} setOpen={setDetailsOpen} callId={selectedId}/>}
   </Stack>
 }
 
