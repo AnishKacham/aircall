@@ -63,7 +63,7 @@ const CallActivity = (props)=>{
         'Content-type': 'application/json; charset=UTF-8',
       },
       body: JSON.stringify({
-        "is_archived" : false
+        "is_archived" : "false"
       })
     }).then(res=>{console.log(res)})
     .catch(err=> {console.log(err)})

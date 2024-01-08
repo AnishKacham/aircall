@@ -49,7 +49,7 @@ const CallActivity = (props)=>{
           'Content-type': 'application/json; charset=UTF-8',
         },
         body:JSON.stringify({
-          "is_archived" : true
+          "is_archived" : "true"
         })
       })
     )).then((res)=>{
@@ -61,13 +61,13 @@ const CallActivity = (props)=>{
 
   const handleArchive = (id) => {
     console.log(`archiving ${id} . . .`)
-    fetch(`https://charming-bat-singlet.cyclic.app/cerulean-marlin-wig.cyclic.app/activites/${id}`,{
+    fetch(`https://cerulean-marlin-wig.cyclic.app/activites/${id}`,{
       method: "PATCH",
       headers:{
         'Content-type': 'application/json; charset=UTF-8',
       },
       body: JSON.stringify({
-        "is_archived" : true
+        "is_archived" : "true"
       })
     }).then(res=>{
       console.log(res)

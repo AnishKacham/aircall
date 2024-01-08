@@ -38,7 +38,7 @@ export default function CallDetail(props){
       fetch(`https://cerulean-marlin-wig.cyclic.app/activities/639737ac587edc08100c026f`,{
       method: 'PATCH',
       body: JSON.stringify({
-        "is_archived": false
+        "is_archived": "false"
       })
     })
       .then(()=>{
@@ -52,7 +52,7 @@ export default function CallDetail(props){
       fetch(`https://cerulean-marlin-wig.cyclic.app/activities/639737ac587edc08100c026f`,{
       method: 'PATCH',
       body: JSON.stringify({
-        "is_archived": true
+        "is_archived": "true"
       })
       })
       .then(()=>{
