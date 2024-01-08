@@ -1,6 +1,6 @@
 import React, {useEffect,useState} from "react"
 import Boundary from "../components/Boundary.jsx";
-import { Chip, Button, Card, IconButton, Stack } from "@mui/material";
+import { Chip, Button, Card, IconButton, Stack, Snackbar, Alert } from "@mui/material";
 import NorthWestIcon from '@mui/icons-material/NorthWest';
 import SouthEastIcon from '@mui/icons-material/SouthEast';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -8,6 +8,9 @@ import ArchiveTwoToneIcon from '@mui/icons-material/ArchiveTwoTone';
 import _ from 'lodash';
 import CallDetail from "./CallDetail.jsx";
 import { InfoTwoTone } from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
+
+
 
 const CallActivity = (props)=>{
   const [fetchState,setFetchState] = useState("loading");
@@ -15,25 +18,40 @@ const CallActivity = (props)=>{
   const [rawCallsList,setRawCallsList] = useState([]);
   const [detailsOpen,setDetailsOpen] = useState(false);
   const [selectedId,setSelectedId] = useState(0);
+  const [archiveAllLoading,setArchvieAllLoading] = useState(false);
+  const [snackBarOpen,setSnackBarContent] = useState({
+    open: false,
+    severity: "error",
+    message: ""
+  });
 
   useEffect(()=>{
     fetch("https://cerulean-marlin-wig.cyclic.app/activities")
     .then(res => res.json())
     .then(calls => {
       setRawCallsList(calls);
-      const modifiedData = _.chain(calls).filter({'is_archived':false}).orderBy('created_at','desc').groupBy((record)=>{
-        const date = new Date(record.created_at)
-        return date.toLocaleDateString('default', { month: 'long' }) + " " + date.getDate() + ", " + date.getFullYear();
-      }).value()
-      console.log(modifiedData)
-      setCalls(modifiedData)
+      setCalls(prepareForRender(calls,false))
       setFetchState("success")
     })
     .catch(err=>{
       console.error(err);
       setFetchState("failed")
     })
-  },[])
+  },[detailsOpen])
+
+  const handleSnackBarClose = () => {
+    setSnackBarContent(_.assign({},snackBarOpen,{open:false}));
+  }
+
+  const prepareForRender = (rawcalls,arhived) =>
+    _.chain(rawcalls)
+          .filter({'is_archived':arhived})
+          .orderBy('created_at','desc')
+          .groupBy((record)=>{
+          const date = new Date(record.created_at)
+          return date.toLocaleDateString('default', { month: 'long' }) + " " + date.getDate() + ", " + date.getFullYear();
+          })
+          .value()
 
   const handleCallDetailClick = (selectedId)=>{
     setSelectedId(selectedId);
@@ -41,38 +59,57 @@ const CallActivity = (props)=>{
   }
 
   const handleArchiveAll = () => {
-    console.log("Archiving all calls . . .");
-    Promise.all(rawCallsList.map(
-      call => fetch(`https://cerulean-marlin-wig.cyclic.app/activites/${call.id}`,{
-        method: "PATCH",
-        headers:{
-          'Content-type': 'application/json; charset=UTF-8',
+    setArchvieAllLoading(true);
+    Promise.allSettled(_.map(rawCallsList,(call)=>{
+      return fetch(`https://cerulean-marlin-wig.cyclic.app/activities/${call.id}`,{
+        headers: {
+          'Content-Type' : 'application/json',
         },
-        body:JSON.stringify({
-          "is_archived" : "true"
+        method: 'PATCH',
+        body: JSON.stringify({
+          "is_archived": true
         })
       })
-    )).then((res)=>{
-      setCalls({});
-      setRawCallsList([]);
-      console.log("ARCHIVED ALL CALLS")
-    })
+    }))
+    .then(results=>{
+      console.log(results)
+      const notArchivedCalls = _.filter(rawCallsList,(call,index)=>{
+        return (results[index].status==='fulfilled' && results[index].value.ok===false) || (results[index].status==='rejected')
+      });
+      console.log(notArchivedCalls);
+      setRawCallsList(notArchivedCalls);
+      setArchvieAllLoading(false);
+      setCalls(prepareForRender(notArchivedCalls,false));
+      if(notArchivedCalls.length > 0) setSnackBarContent({
+        open: true,
+        severity: "error",
+        message: `Could not archvie ${notArchivedCalls.length} calls`
+      })
+  })
   }
 
   const handleArchive = (id) => {
     console.log(`archiving ${id} . . .`)
-    fetch(`https://cerulean-marlin-wig.cyclic.app/activites/${id}`,{
-      method: "PATCH",
-      headers:{
-        'Content-type': 'application/json; charset=UTF-8',
-      },
-      body: JSON.stringify({
-        "is_archived" : "true"
+    fetch(`https://cerulean-marlin-wig.cyclic.app/activities/${id}`,{
+        headers: {
+          "Content-Type": "application/json"
+        },
+        method: 'PATCH',
+        body: JSON.stringify({
+          "is_archived": true
       })
-    }).then(res=>{
-      console.log(res)
+    }).then((res)=>{
+      if(res.status==200) {
+        const unArchivedCalls = _.filter(rawCallsList,call=>call.id!=id);
+        setCalls(prepareForRender(unArchivedCalls,false));
+        setRawCallsList(unArchivedCalls);
+      }
+      else throw Error("Status not 200");
     })
-    .catch(err=> {console.log(err)})
+    .catch(err=>{
+      console.log("ARCHIVE FAILED")
+      console.log(err);
+    })
   }
 
   if(fetchState!="success") return <Boundary fetchState={fetchState}/>
@@ -84,7 +121,7 @@ const CallActivity = (props)=>{
     height: "100%",
     gap: "20px",
   }}>
-    <Button color="error" variant="contained" startIcon={<ArchiveTwoToneIcon/>} onClick={handleArchiveAll}>Archive All Calls</Button>
+    <LoadingButton loading={archiveAllLoading} loadingIndicator="Loading . . ." color="error" variant="contained" startIcon={<ArchiveTwoToneIcon/>} onClick={handleArchiveAll}>Archive All Calls</LoadingButton>
     {
       Object.entries(callsList).map(([key,value],i)=>{
         return <div key={i}>
@@ -151,6 +188,16 @@ const CallActivity = (props)=>{
       })
     }
     {detailsOpen && <CallDetail open={detailsOpen} setOpen={setDetailsOpen} callId={selectedId}/>}
+    <Snackbar
+      open={snackBarOpen.open}
+      autoHideDuration={3000}
+      onClose={handleSnackBarClose}
+      anchorOrigin={{horizontal: "center", vertical: "top"}}
+      >
+      <Alert onClose={handleSnackBarClose} severity={snackBarOpen.severity}>
+        {snackBarOpen.message}
+      </Alert>
+    </Snackbar>
   </Stack>
 }
 

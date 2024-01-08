@@ -33,7 +33,7 @@ const CallActivity = (props)=>{
       console.error(err);
       setFetchState("failed")
     })
-  },[])
+  },[detailsOpen])
 
   const handleCallDetailClick = (selectedId)=>{
     setSelectedId(selectedId);
@@ -48,25 +48,49 @@ const CallActivity = (props)=>{
           'Content-type': 'application/json; charset=UTF-8',
         }
       })
-      .then((res,err)=>{
-        console.log("success");
-        setCalls({});
-        setRawCallsList([]);
+      .then((res)=>{
+        if(res.status===200){
+          setCalls({});
+          setRawCallsList([]);
+        }
+        else throw Error("Status not 200")        
+      })
+      .catch(err=>{
+        console.log("FAILED TO UNARCHIVE ALL CALLS");
+        console.log(err);
       })
   }
 
   const handleUnarchive = (id) => {
     console.log(`un archiving ${id} . . .`)
-    fetch(`https://cerulean-marlin-wig.cyclic.app/activites/${id}`,{
-      method: "PATCH",
-      headers:{
-        'Content-type': 'application/json; charset=UTF-8',
-      },
-      body: JSON.stringify({
-        "is_archived" : "false"
+    fetch(`https://cerulean-marlin-wig.cyclic.app/activities/${id}`,{
+        headers: {
+          "Content-Type": "application/json"
+        },
+        method: 'PATCH',
+        body: JSON.stringify({
+          "is_archived": false
       })
-    }).then(res=>{console.log(res)})
-    .catch(err=> {console.log(err)})
+    }).then(res=>{
+      if(res.status===200){
+        setCalls(
+          _.chain(rawCallsList).filter((call)=>call.id!=id)
+          .filter({'is_archived':true})
+          .orderBy('created_at','desc')
+          .groupBy((record)=>{
+          const date = new Date(record.created_at)
+          return date.toLocaleDateString('default', { month: 'long' }) + " " + date.getDate() + ", " + date.getFullYear();
+          })
+          .value()
+        );
+        setRawCallsList(_.filter(rawCallsList,(call)=>call.id!=id));
+      }
+      else throw Error("Status not 200");
+    })
+    .catch(err=> {
+      console.log(`FAILED TO UNARCHIVE CALL ID ${id}`);
+      console.log(err)
+    })
   }
 
   if(fetchState!="success") return <Boundary fetchState={fetchState}/>
@@ -81,8 +105,8 @@ const CallActivity = (props)=>{
     <Button color="success" variant="contained" startIcon={<UnarchiveTwoToneIcon/>} onClick={handleUnarchvieAll}>Unarchive All Calls</Button>
     {
       Object.entries(callsList).map(([key,value],i)=>{
-        return <div>
-          <div key={i} style={{
+        return <div key={i} >
+          <div style={{
             width:"100%",
             textAlign: "center",
             fontWeight: "bolder"

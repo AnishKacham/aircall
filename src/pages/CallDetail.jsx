@@ -35,32 +35,51 @@ export default function CallDetail(props){
 
   const handleArchiveUnarchive = () => {
     if(calldetails.is_archived === true){
-      fetch(`https://cerulean-marlin-wig.cyclic.app/activities/639737ac587edc08100c026f`,{
-      method: 'PATCH',
-      body: JSON.stringify({
-        "is_archived": "false"
+      fetch(`https://cerulean-marlin-wig.cyclic.app/activities/${callId}`,{
+        headers: {
+          "Content-Type": "application/json"
+        },
+        method: 'PATCH',
+        body: JSON.stringify({
+          "is_archived": false
       })
     })
-      .then(()=>{
-        let clone = Object.assign({},calldetails);
-        clone.is_archived = false;
-        setCallDetails(clone);
+      .then((res)=>{
+        if(res.status===200){
+          let clone = Object.assign({},calldetails);
+          clone.is_archived = false;
+          setCallDetails(clone);
+        }
+        else throw Error("Status not 200")
       })
-      .catch(err=>{console.log(err)})
+      .catch(err=>{
+
+        console.log("FAILED TO UNARCHIVE");
+        console.log(err)
+      })
     }
     else{
-      fetch(`https://cerulean-marlin-wig.cyclic.app/activities/639737ac587edc08100c026f`,{
-      method: 'PATCH',
-      body: JSON.stringify({
-        "is_archived": "true"
+      fetch(`https://cerulean-marlin-wig.cyclic.app/activities/${callId}`,{
+        headers: {
+          "Content-Type": "application/json"
+        },
+        method: 'PATCH',
+        body: JSON.stringify({
+          "is_archived": true
+        })
       })
+      .then((res)=>{
+        if(res.status===200){
+          let clone = Object.assign({},calldetails);
+          clone.is_archived = true;
+          setCallDetails(clone);
+        }
+        else throw Error("Status not 200")
       })
-      .then(()=>{
-        let clone = Object.assign({},calldetails);
-        clone.is_archived = true;
-        setCallDetails(clone);
+      .catch(err=>{
+        console.log("FAILED TO ARCHIVE");
+        console.log(err);
       })
-      .catch(err=>{console.log(err)})
     }
   }
   
