@@ -8,12 +8,20 @@
   "license": "",
   "private": false,
   "scripts": {
-    "start": "webpack-dev-server --mode development --open",
+    "start": "set \"NODE_OPTIONS=--openssl-legacy-provider\" && webpack-dev-server --mode development --open",
     "build": "webpack --mode production"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.3",
+    "@mui/material": "^5.15.3",
+    "@mui/material-next": "^6.0.0-alpha.116",
+    "lodash": "^4.17.21",
     "react": "^16.3.1",
-    "react-dom": "^16.3.1"
+    "react-dom": "^16.3.1",
+    "react-router-dom": "^6.21.1",
+    "react-scripts": "^5.0.1"
   },
   "devDependencies": {
     "babel-core": "6.26.*",
