@@ -203,14 +203,14 @@ export default function CallDetail(props){
             display: "flex",
             alignItems: "center",
             gap: "10px"
-          }}><TimelapseIcon color="primary"/> {Math.floor(calldetails.duration / 3600)}h {Math.floor(calldetails.duration % 60)}m</div>
+          }}><TimelapseIcon color="primary"/> {Math.floor(calldetails.duration / 3600)}h {Math.floor(((calldetails.duration) % 3600)/60)}m {Math.floor((((calldetails.duration) % 3600)%60))}s</div>
           
 
 
           {
             calldetails.is_archived === true ?
             <Button color="success" variant="contained" endIcon={<Unarchive/>} onClick={handleArchiveUnarchive}>
-              Unarchvie
+              Unarchive
             </Button>
             :<Button color="error" variant="contained" endIcon={<Archive/>} onClick={handleArchiveUnarchive}>
               Archive
