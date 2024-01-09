@@ -9,6 +9,7 @@ import _ from 'lodash';
 import CallDetail from "./CallDetail.jsx";
 import { InfoTwoTone } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
+import Snack from "../components/Snack.jsx";
 
 
 
@@ -103,10 +104,20 @@ const CallActivity = (props)=>{
         const unArchivedCalls = _.filter(rawCallsList,call=>call.id!=id);
         setCalls(prepareForRender(unArchivedCalls,false));
         setRawCallsList(unArchivedCalls);
+        setSnackBarContent({
+          open: true,
+          severity: "success",
+          message: `Archvied Call with id ${id}`
+        })
       }
       else throw Error("Status not 200");
     })
     .catch(err=>{
+      setSnackBarContent({
+        open: true,
+        severity: "error",
+        message: `Could not archvie Call with ${id}`
+      })
       console.log("ARCHIVE FAILED")
       console.log(err);
     })
@@ -192,7 +203,7 @@ const CallActivity = (props)=>{
       open={snackBarOpen.open}
       autoHideDuration={3000}
       onClose={handleSnackBarClose}
-      anchorOrigin={{horizontal: "center", vertical: "top"}}
+      anchorOrigin={{horizontal: "center", vertical: "bottom"}}
       >
       <Alert onClose={handleSnackBarClose} severity={snackBarOpen.severity}>
         {snackBarOpen.message}

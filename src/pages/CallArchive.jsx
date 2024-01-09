@@ -1,6 +1,6 @@
 import React, {useEffect,useState} from "react"
 import Boundary from "../components/Boundary.jsx";
-import { Chip, Button, Card, IconButton, Stack } from "@mui/material";
+import { Chip, Button, Card, IconButton, Stack, Snackbar, Alert } from "@mui/material";
 import NorthWestIcon from '@mui/icons-material/NorthWest';
 import SouthEastIcon from '@mui/icons-material/SouthEast';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -15,6 +15,15 @@ const CallActivity = (props)=>{
   const [rawCallsList,setRawCallsList] = useState([]);
   const [detailsOpen,setDetailsOpen] = useState(false);
   const [selectedId,setSelectedId] = useState(0);
+  const [snackBarState,setSnackBarState] = useState({
+    open: false,
+    message: "",
+    severity: "success"
+  })
+
+  const handleSnackBarClose = () => {
+    setSnackBarState(_.assign({},snackBarState,{open:false}));
+  }
 
   useEffect(()=>{
     fetch("https://cerulean-marlin-wig.cyclic.app/activities")
@@ -52,10 +61,12 @@ const CallActivity = (props)=>{
         if(res.status===200){
           setCalls({});
           setRawCallsList([]);
+          setSnackBarState({open:true,message:"Unarchived all calls",severity:"success"});
         }
         else throw Error("Status not 200")        
       })
       .catch(err=>{
+        setSnackBarState({open:true,message:"Failed to unarchvie ll calls",severity:"error"});
         console.log("FAILED TO UNARCHIVE ALL CALLS");
         console.log(err);
       })
@@ -84,10 +95,12 @@ const CallActivity = (props)=>{
           .value()
         );
         setRawCallsList(_.filter(rawCallsList,(call)=>call.id!=id));
+        setSnackBarState({open:true,message:`Unarchived call with id ${id}`,severity:"success"});
       }
       else throw Error("Status not 200");
     })
     .catch(err=> {
+      setSnackBarState({open:true,message:`Failed to unarchive call with id ${id}`,severity:"error"});
       console.log(`FAILED TO UNARCHIVE CALL ID ${id}`);
       console.log(err)
     })
@@ -169,6 +182,16 @@ const CallActivity = (props)=>{
       })
     }
     {detailsOpen && <CallDetail open={detailsOpen} setOpen={setDetailsOpen} callId={selectedId}/>}
+    <Snackbar
+      open={snackBarState.open}
+      autoHideDuration={3000}
+      onClose={handleSnackBarClose}
+      anchorOrigin={{horizontal: "center", vertical: "bottom"}}
+      >
+      <Alert onClose={handleSnackBarClose} severity={snackBarState.severity}>
+        {snackBarState.message}
+      </Alert>
+    </Snackbar>
   </Stack>
 }
 

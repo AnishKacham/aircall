@@ -22,3 +22,9 @@ body{
   justify-content: flex-start;
   flex-direction: column;
 }
+
+.MuiSnackbar-anchorOriginBottomCenter {
+  position: relative;
+  bottom: 200px !important;
+  width: 350px !important;
+}
